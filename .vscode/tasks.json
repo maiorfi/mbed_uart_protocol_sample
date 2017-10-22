@@ -15,6 +15,11 @@
         {
             "taskName": "mbed_compile_release",
             "type": "shell",
+            "command": "mbed compile --profile mbed-os/tools/profiles/release.json"
+        },
+        {
+            "taskName": "mbed_clean_and_compile_release",
+            "type": "shell",
             "command": "mbed compile --profile mbed-os/tools/profiles/release.json -c"
         }
     ]

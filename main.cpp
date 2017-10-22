@@ -2,8 +2,8 @@
 
 #include <string>
 
-#define DEBUG_CHANNEL_SWO 0
-#define DEBUG_CHANNEL_RTT 1
+#define DEBUG_CHANNEL_SWO 1
+#define DEBUG_CHANNEL_RTT 0
 
 #if (DEBUG_CHANNEL_SWO)
 #include "SWO.h"
@@ -31,6 +31,9 @@ static Timer s_timer_1;
 
 BufferedSerial pc_buffered_serial(SERIAL_TX, SERIAL_RX);
 
+static Thread s_thread_blink_worker;
+static EventQueue s_eq_blink_worker;
+
 static Thread s_thread_serial_worker;
 static EventQueue s_eq_serial_worker;
 
@@ -38,11 +41,6 @@ static Thread s_thread_command_handler_worker;
 static EventQueue s_eq_command_handler_worker;
 
 #define PROTOCOL_TIMEOUT_MS (1000)
-
-void event_proc_blink(DigitalOut *pled)
-{
-    pled->write(!pled->read());
-}
 
 typedef enum _protocol_states_enum {
     WAITING_START,
@@ -54,12 +52,22 @@ static ProtocolStates current_protocol_state;
 static std::string current_protocol_content;
 static int current_protocol_timeout_event_id;
 
+void event_proc_blink_worker(DigitalOut *pled)
+{
+    pled->write(!pled->read());
+}
+
 void event_proc_command_handler(std::string *pcontent)
 {
 
 #if (DEBUG_CHANNEL_RTT)
     if (pcontent->size() != 0)
         SEGGER_RTT_printf(0, "[COMMAND_HANDLER - %d] Ricevuto Comando: '%s'\n", s_timer_1.read_ms(), pcontent->c_str());
+#endif
+
+#if (DEBUG_CHANNEL_SWO)
+    if (pcontent->size() != 0)
+        swo.printf("[COMMAND_HANDLER - %d] Ricevuto Comando: '%s'\n", s_timer_1.read_ms(), pcontent->c_str());
 #endif
 
     if (pcontent->compare("CIAO") == 0)
@@ -88,7 +96,8 @@ void event_proc_protocol_worker()
     {
         char c = pc_buffered_serial.getc();
 
-        if(c=='\r' || c=='\n') continue;
+        if (c == '\r' || c == '\n')
+            continue;
 
 #if (DEBUG_CHANNEL_RTT)
         SEGGER_RTT_printf(0, "[PROTOCOL_HANDLER - %d] Ricevuto '%c'\n", s_timer_1.read_ms(), c);
@@ -192,12 +201,15 @@ int main()
 {
     initTracingSystem();
 
-    pc_buffered_serial.baud(921600);
+    pc_buffered_serial.baud(115200);
 
     s_eq_serial_worker.call_every(100, event_proc_protocol_worker);
     s_thread_serial_worker.start(callback(&s_eq_serial_worker, &EventQueue::dispatch_forever));
 
     s_thread_command_handler_worker.start(callback(&s_eq_command_handler_worker, &EventQueue::dispatch_forever));
+
+    s_eq_blink_worker.call_every(500, event_proc_blink_worker, &led1);
+    s_thread_blink_worker.start(callback(&s_eq_blink_worker, &EventQueue::dispatch_forever));
 
     s_timer_1.start();
 }
