@@ -6,6 +6,11 @@
         "vector": "cpp",
         "xstring": "cpp",
         "queue": "cpp",
-        "istream": "cpp"
+        "istream": "cpp",
+        "ios": "cpp",
+        "system_error": "cpp",
+        "xhash": "cpp",
+        "xiosbase": "cpp",
+        "xtree": "cpp"
     }
 }

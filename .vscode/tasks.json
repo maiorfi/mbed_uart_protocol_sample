@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "mbed compile (debug)",
+            "taskName": "mbed_compile_debug",
             "type": "shell",
             "command": "mbed compile --profile mbed-os/tools/profiles/debug.json",
             "group": {
@@ -13,7 +13,7 @@
             }
         },
         {
-            "taskName": "mbed compile (release)",
+            "taskName": "mbed_compile_release",
             "type": "shell",
             "command": "mbed compile --profile mbed-os/tools/profiles/release.json -c"
         }
