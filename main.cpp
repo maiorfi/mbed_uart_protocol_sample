@@ -59,6 +59,7 @@ void event_proc_blink_worker(DigitalOut *pled)
 
 void event_proc_command_handler(std::string *pcontent)
 {
+    led3 = true;
 
 #if (DEBUG_CHANNEL_RTT)
     if (pcontent->size() != 0)
@@ -76,16 +77,26 @@ void event_proc_command_handler(std::string *pcontent)
     }
 
     delete pcontent;
+
+    led3 = false;
 }
 
 void event_proc_protocol_timeout_handler()
 {
+    led4 = true;
+
     current_protocol_content.clear();
     current_protocol_state = WAITING_START;
 
 #if (DEBUG_CHANNEL_RTT)
     SEGGER_RTT_printf(0, "[PROTOCOL_HANDLER - %d] TIMEOUT (%u ms), Stato Settato a 'WAITING_START'\n", s_timer_1.read_ms(), PROTOCOL_TIMEOUT_MS);
 #endif
+
+#if (DEBUG_CHANNEL_SWO)
+    swo.printf("[PROTOCOL_HANDLER - %d] TIMEOUT (%u ms), Stato Settato a 'WAITING_START'\n", s_timer_1.read_ms(), PROTOCOL_TIMEOUT_MS);
+#endif
+
+    led4 = false;
 }
 
 void event_proc_protocol_worker()
